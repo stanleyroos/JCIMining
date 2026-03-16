@@ -1,0 +1,146 @@
+
+(12 rows affected)
+
+(2 rows affected)
+
+(1 rows affected)
+
+(5 rows affected)
+
+(5 rows affected)
+
+(8 rows affected)
+
+(5 rows affected)
+
+(5 rows affected)
+
+(5 rows affected)
+
+(3 rows affected)
+
+(3 rows affected)
+
+(6 rows affected)
+
+(9 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(6 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(36 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(6 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(5 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(7 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+Entity          Count      
+--------------- -----------
+Suppliers                 6
+POs                       9
+PO Lines                  9
+Documents                 9
+Invoice Headers           9
+Invoice Lines            64
+Approval Queue            9
+Audit Log                 9
+
+(8 rows affected)

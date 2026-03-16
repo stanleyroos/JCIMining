@@ -1,0 +1,177 @@
+{
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      },
+      "cuEndpoint": {
+        "type": "String",
+        "defaultValue": "https://JCIProd-resource-8806.cognitiveservices.azure.com/"
+      },
+      "cuApiKey": {
+        "type": "SecureString",
+        "defaultValue": ""
+      },
+      "jciAppUrl": {
+        "type": "String",
+        "defaultValue": "https://jciinvoiceapp-dwd4cda8hwbverc2.southafricanorth-01.azurewebsites.net"
+      }
+    },
+    "triggers": {
+      "When_a_new_email_arrives_in_a_shared_mailbox_(V2)": {
+        "type": "ApiConnectionNotification",
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['office365']['connectionId']"
+            }
+          },
+          "fetch": {
+            "pathTemplate": {
+              "template": "/v2/SharedMailbox/Mail/OnNewEmail"
+            },
+            "method": "get",
+            "queries": {
+              "mailboxAddress": "invoices@jcimining.co.za",
+              "fetchOnlyWithAttachment": true,
+              "includeAttachments": true,
+              "importance": "Any",
+              "folderPath": "Inbox"
+            }
+          },
+          "subscribe": {
+            "body": {
+              "NotificationUrl": "@{listCallbackUrl()}"
+            },
+            "pathTemplate": {
+              "template": "/GraphMailSubscriptionPoke/$subscriptions"
+            },
+            "method": "post",
+            "queries": {
+              "mailboxAddress": "invoices@jcimining.co.za"
+            }
+          }
+        },
+        "splitOn": "@triggerBody()?['value']"
+      }
+    },
+    "actions": {
+      "For_each_attachment": {
+        "type": "Foreach",
+        "foreach": "@triggerBody()?['Attachments']",
+        "runAfter": {},
+        "actions": {
+          "Is_PDF_attachment": {
+            "type": "If",
+            "expression": {
+              "or": [
+                {
+                  "endsWith": [
+                    "@toLower(items('For_each_attachment')?['Name'])",
+                    ".pdf"
+                  ]
+                },
+                {
+                  "equals": [
+                    "@items('For_each_attachment')?['ContentType']",
+                    "application/pdf"
+                  ]
+                }
+              ]
+            },
+            "actions": {
+              "Analyze_Invoice_Document": {
+                "type": "Http",
+                "inputs": {
+                  "method": "POST",
+                  "uri": "@{parameters('cuEndpoint')}contentunderstanding/analyzers/Invoices:syncAnalyze?api-version=2024-12-01-preview",
+                  "headers": {
+                    "Ocp-Apim-Subscription-Key": "@parameters('cuApiKey')",
+                    "Content-Type": "application/json"
+                  },
+                  "body": {
+                    "content": "@items('For_each_attachment')?['ContentBytes']"
+                  },
+                  "retryPolicy": {
+                    "type": "fixed",
+                    "count": 3,
+                    "interval": "PT5S"
+                  }
+                }
+              },
+              "Extract_Fields": {
+                "type": "Compose",
+                "runAfter": {
+                  "Analyze_Invoice_Document": ["Succeeded"]
+                },
+                "inputs": {
+                  "fields": "@body('Analyze_Invoice_Document')?['result']?['contents']?[0]?['fields']"
+                }
+              },
+              "Save_Invoice_to_DB": {
+                "type": "Http",
+                "runAfter": {
+                  "Extract_Fields": ["Succeeded"]
+                },
+                "inputs": {
+                  "method": "POST",
+                  "uri": "@{parameters('jciAppUrl')}/api/invoices/ingest",
+                  "headers": {
+                    "Content-Type": "application/json"
+                  },
+                  "body": {
+                    "fileName": "@items('For_each_attachment')?['Name']",
+                    "sourceMailbox": "invoices@jcimining.co.za",
+                    "receivedDateTime": "@triggerBody()?['ReceivedDateTime']",
+                    "rawJson": "@{string(body('Analyze_Invoice_Document'))}",
+                    "SupplierName": "@outputs('Extract_Fields')?['fields']?['SupplierName']?['valueString']",
+                    "SupplierVatNumber": "@outputs('Extract_Fields')?['fields']?['SupplierVatNumber']?['valueString']",
+                    "InvoiceNumber": "@outputs('Extract_Fields')?['fields']?['InvoiceNumber']?['valueString']",
+                    "InvoiceDate": "@outputs('Extract_Fields')?['fields']?['InvoiceDate']?['valueDate']",
+                    "PurchaseOrderNumber": "@outputs('Extract_Fields')?['fields']?['PurchaseOrderNumber']?['valueString']",
+                    "Currency": "@outputs('Extract_Fields')?['fields']?['Currency']?['valueString']",
+                    "SubtotalAmount": "@outputs('Extract_Fields')?['fields']?['SubtotalAmount']?['valueNumber']",
+                    "VatAmount": "@outputs('Extract_Fields')?['fields']?['VatAmount']?['valueNumber']",
+                    "TotalAmount": "@outputs('Extract_Fields')?['fields']?['TotalAmount']?['valueNumber']",
+                    "BankName": "@outputs('Extract_Fields')?['fields']?['BankName']?['valueString']",
+                    "BankAccountNumber": "@outputs('Extract_Fields')?['fields']?['BankAccountNumber']?['valueString']",
+                    "BankBranchCode": "@outputs('Extract_Fields')?['fields']?['BankBranchCode']?['valueString']",
+                    "LineItems": "@outputs('Extract_Fields')?['fields']?['LineItems']?['valueArray']"
+                  }
+                }
+              },
+              "Log_Result": {
+                "type": "Compose",
+                "runAfter": {
+                  "Save_Invoice_to_DB": ["Succeeded", "Failed"]
+                },
+                "inputs": {
+                  "file": "@items('For_each_attachment')?['Name']",
+                  "statusCode": "@outputs('Save_Invoice_to_DB')['statusCode']",
+                  "result": "@body('Save_Invoice_to_DB')"
+                }
+              }
+            },
+            "else": {
+              "actions": {}
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "$connections": {
+      "value": {
+        "office365": {
+          "id": "/subscriptions/{SUBSCRIPTION_ID}/providers/Microsoft.Web/locations/{REGION}/managedApis/office365",
+          "connectionId": "/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/{RG}/providers/Microsoft.Web/connections/office365",
+          "connectionName": "office365"
+        }
+      }
+    }
+  }
+}
