@@ -8,52 +8,40 @@
         "type": "Object"
       },
       "cuEndpoint": {
-        "type": "String",
-        "defaultValue": "https://JCIProd-resource-8445.cognitiveservices.azure.com/"
+        "defaultValue": "https://JCIProd-resource-8445.cognitiveservices.azure.com/",
+        "type": "String"
       },
       "cuApiKey": {
-        "type": "SecureString",
-        "defaultValue": ""
+        "defaultValue": "",
+        "type": "SecureString"
       },
       "jciAppUrl": {
-        "type": "String",
-        "defaultValue": "https://jciinvoiceapp-dwd4cda8hwbverc2.southafricanorth-01.azurewebsites.net"
+        "defaultValue": "https://jciinvoiceapp-dwd4cda8hwbverc2.southafricanorth-01.azurewebsites.net",
+        "type": "String"
       }
     },
     "triggers": {
       "When_a_new_email_arrives_in_a_shared_mailbox_(V2)": {
-        "type": "ApiConnectionNotification",
+        "type": "ApiConnection",
         "inputs": {
           "host": {
             "connection": {
               "name": "@parameters('$connections')['office365']['connectionId']"
             }
           },
-          "fetch": {
-            "pathTemplate": {
-              "template": "/v2/SharedMailbox/Mail/OnNewEmail"
-            },
-            "method": "get",
-            "queries": {
-              "mailboxAddress": "invoices@jcimining.co.za",
-              "fetchOnlyWithAttachment": true,
-              "includeAttachments": true,
-              "importance": "Any",
-              "folderPath": "Inbox"
-            }
-          },
-          "subscribe": {
-            "body": {
-              "NotificationUrl": "@{listCallbackUrl()}"
-            },
-            "pathTemplate": {
-              "template": "/GraphMailSubscriptionPoke/$subscriptions"
-            },
-            "method": "post",
-            "queries": {
-              "mailboxAddress": "invoices@jcimining.co.za"
-            }
+          "method": "get",
+          "path": "/v2/SharedMailbox/Mail/OnNewEmail",
+          "queries": {
+            "mailboxAddress": "invoices@jcimining.co.za",
+            "importance": "Any",
+            "hasAttachments": true,
+            "includeAttachments": true,
+            "folderId": "Inbox"
           }
+        },
+        "recurrence": {
+          "interval": 3,
+          "frequency": "Minute"
         },
         "splitOn": "@triggerBody()?['value']"
       }
@@ -165,7 +153,14 @@
   },
   "parameters": {
     "$connections": {
-      "value": {}
+      "value": {
+        "office365": {
+          "id": "/subscriptions/271a37fd-fcb5-4354-868e-5c66d5fd88d2/providers/Microsoft.Web/locations/southafricanorth/managedApis/office365",
+          "connectionId": "/subscriptions/271a37fd-fcb5-4354-868e-5c66d5fd88d2/resourceGroups/JCIProd/providers/Microsoft.Web/connections/office365",
+          "connectionName": "office365",
+          "connectionProperties": {}
+        }
+      }
     }
   }
 }
