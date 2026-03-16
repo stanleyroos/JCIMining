@@ -69,7 +69,7 @@ Returns: extracted invoice fields (supplier, amounts, bank details, line items).
 **Action inside this Case:**
 - Type: HTTP
 - Method: POST
-- URL: `https://JCIProd-resource-8806.cognitiveservices.azure.com/contentunderstanding/analyzers/Invoices:syncAnalyze?api-version=2024-12-01-preview`
+- URL: `https://JCIProd-resource-8445.cognitiveservices.azure.com/contentunderstanding/analyzers/JCIInvoices:syncAnalyze?api-version=2024-12-01-preview`
 - Headers:
   - `Ocp-Apim-Subscription-Key`: [your Content Understanding key]
   - `Content-Type`: application/json
@@ -195,7 +195,7 @@ Note: Logic Apps does not support inline `map()` — use a Select action instead
 2. Go to **Logic App Designer** → switch to **Code View**
 3. Paste the contents of `workflow.json`
 4. In the Parameters section, fill in:
-   - `cuEndpoint`: `https://JCIProd-resource-8806.cognitiveservices.azure.com/`
+   - `cuEndpoint`: `https://JCIProd-resource-8445.cognitiveservices.azure.com/`
    - `cuApiKey`: your Content Understanding key (find in Azure portal under the resource → Keys)
    - `jciAppUrl`: `https://jciinvoiceapp-dwd4cda8hwbverc2.southafricanorth-01.azurewebsites.net`
 5. Set up the Office 365 connection when prompted
@@ -239,7 +239,7 @@ Add a **Select** action between Extract_Fields and Save_Invoice_to_DB:
 
 | Parameter | Value | Where to find it |
 |---|---|---|
-| `cuEndpoint` | `https://JCIProd-resource-8806.cognitiveservices.azure.com/` | Azure Portal → resource → Overview |
+| `cuEndpoint` | `https://JCIProd-resource-8445.cognitiveservices.azure.com/` | Azure Portal → resource → Overview |
 | `cuApiKey` | your key | Azure Portal → resource → Keys and Endpoint |
 | `jciAppUrl` | your App Service URL | Azure Portal → App Service → Overview |
 

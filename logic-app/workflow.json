@@ -9,7 +9,7 @@
       },
       "cuEndpoint": {
         "type": "String",
-        "defaultValue": "https://JCIProd-resource-8806.cognitiveservices.azure.com/"
+        "defaultValue": "https://JCIProd-resource-8445.cognitiveservices.azure.com/"
       },
       "cuApiKey": {
         "type": "SecureString",
@@ -87,7 +87,7 @@
                 "type": "Http",
                 "inputs": {
                   "method": "POST",
-                  "uri": "@{parameters('cuEndpoint')}contentunderstanding/analyzers/Invoices:syncAnalyze?api-version=2024-12-01-preview",
+                  "uri": "@{parameters('cuEndpoint')}contentunderstanding/analyzers/JCIInvoices:syncAnalyze?api-version=2024-12-01-preview",
                   "headers": {
                     "Ocp-Apim-Subscription-Key": "@parameters('cuApiKey')",
                     "Content-Type": "application/json"
