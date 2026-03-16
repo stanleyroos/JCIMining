@@ -51,6 +51,7 @@
         "type": "Foreach",
         "foreach": "@triggerBody()?['Attachments']",
         "runAfter": {},
+        "operationOptions": "Sequential",
         "actions": {
           "Is_PDF_attachment": {
             "type": "If",
@@ -71,11 +72,12 @@
               ]
             },
             "actions": {
-              "Analyze_Invoice_Document": {
+
+              "Submit_Analysis_Job": {
                 "type": "Http",
                 "inputs": {
                   "method": "POST",
-                  "uri": "@{parameters('cuEndpoint')}contentunderstanding/analyzers/JCIInvoices:syncAnalyze?api-version=2024-12-01-preview",
+                  "uri": "@{parameters('cuEndpoint')}contentunderstanding/analyzers/JCIInvoices:analyze?api-version=2024-12-01-preview",
                   "headers": {
                     "Ocp-Apim-Subscription-Key": "@parameters('cuApiKey')",
                     "Content-Type": "application/json"
@@ -83,22 +85,64 @@
                   "body": {
                     "content": "@coalesce(items('For_each_attachment')?['ContentBytes'], items('For_each_attachment')?['contentBytes'])"
                   },
-                  "retryPolicy": {
-                    "type": "fixed",
-                    "count": 3,
-                    "interval": "PT5S"
+                  "operationOptions": "DisableAsyncPattern"
+                }
+              },
+
+              "Get_Operation_URL": {
+                "type": "Compose",
+                "runAfter": {
+                  "Submit_Analysis_Job": ["Succeeded"]
+                },
+                "inputs": "@outputs('Submit_Analysis_Job')['headers']?['operation-location']"
+              },
+
+              "Poll_Until_Complete": {
+                "type": "Until",
+                "runAfter": {
+                  "Get_Operation_URL": ["Succeeded"]
+                },
+                "expression": "@or(equals(body('Poll_Analysis_Status')?['status'], 'Succeeded'), equals(body('Poll_Analysis_Status')?['status'], 'Failed'))",
+                "limit": {
+                  "count": 20,
+                  "timeout": "PT3M"
+                },
+                "actions": {
+                  "Wait_5_Seconds": {
+                    "type": "Wait",
+                    "inputs": {
+                      "interval": {
+                        "count": 5,
+                        "unit": "Second"
+                      }
+                    }
+                  },
+                  "Poll_Analysis_Status": {
+                    "type": "Http",
+                    "runAfter": {
+                      "Wait_5_Seconds": ["Succeeded"]
+                    },
+                    "inputs": {
+                      "method": "GET",
+                      "uri": "@{outputs('Get_Operation_URL')}",
+                      "headers": {
+                        "Ocp-Apim-Subscription-Key": "@parameters('cuApiKey')"
+                      }
+                    }
                   }
                 }
               },
+
               "Extract_Fields": {
                 "type": "Compose",
                 "runAfter": {
-                  "Analyze_Invoice_Document": ["Succeeded"]
+                  "Poll_Until_Complete": ["Succeeded"]
                 },
                 "inputs": {
-                  "fields": "@body('Analyze_Invoice_Document')?['result']?['contents']?[0]?['fields']"
+                  "fields": "@body('Poll_Analysis_Status')?['result']?['contents']?[0]?['fields']"
                 }
               },
+
               "Save_Invoice_to_DB": {
                 "type": "Http",
                 "runAfter": {
@@ -114,7 +158,7 @@
                     "fileName": "@items('For_each_attachment')?['Name']",
                     "sourceMailbox": "invoices@jcimining.co.za",
                     "receivedDateTime": "@triggerBody()?['ReceivedDateTime']",
-                    "rawJson": "@{string(body('Analyze_Invoice_Document'))}",
+                    "rawJson": "@{string(body('Poll_Analysis_Status'))}",
                     "SupplierName": "@outputs('Extract_Fields')?['fields']?['SupplierName']?['valueString']",
                     "SupplierVatNumber": "@outputs('Extract_Fields')?['fields']?['SupplierVatNumber']?['valueString']",
                     "InvoiceNumber": "@outputs('Extract_Fields')?['fields']?['InvoiceNumber']?['valueString']",
@@ -131,6 +175,7 @@
                   }
                 }
               },
+
               "Log_Result": {
                 "type": "Compose",
                 "runAfter": {
@@ -142,6 +187,7 @@
                   "result": "@body('Save_Invoice_to_DB')"
                 }
               }
+
             },
             "else": {
               "actions": {}
