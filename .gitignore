@@ -37,3 +37,6 @@ next-env.d.ts
 
 # test / sample files — not application code
 Invoice Samples/
+
+# Logic App workflow contains API keys — configure in Azure Portal directly
+logic-app/workflow.json
