@@ -81,7 +81,7 @@
                     "Content-Type": "application/json"
                   },
                   "body": {
-                    "content": "@items('For_each_attachment')?['ContentBytes']"
+                    "content": "@coalesce(items('For_each_attachment')?['ContentBytes'], items('For_each_attachment')?['contentBytes'])"
                   },
                   "retryPolicy": {
                     "type": "fixed",
