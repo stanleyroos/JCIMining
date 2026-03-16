@@ -165,13 +165,7 @@
   },
   "parameters": {
     "$connections": {
-      "value": {
-        "office365": {
-          "id": "/subscriptions/{SUBSCRIPTION_ID}/providers/Microsoft.Web/locations/{REGION}/managedApis/office365",
-          "connectionId": "/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/{RG}/providers/Microsoft.Web/connections/office365",
-          "connectionName": "office365"
-        }
-      }
+      "value": {}
     }
   }
 }
