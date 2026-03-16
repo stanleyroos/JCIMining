@@ -18,13 +18,13 @@ interface LineItemInput {
   };
 }
 
-function normalizeLineItem(item: LineItemInput): Omit<LineItemInput, 'valueObject'> {
+function normalizeLineItem(item: LineItemInput): { Description?: string | null; Quantity?: number | null; UnitPrice?: number | null; Amount?: number | null } {
   if (item.valueObject) {
     return {
-      Description: item.valueObject.Description?.valueString ?? null ?? undefined,
-      Quantity:    item.valueObject.Quantity?.valueNumber    ?? null ?? undefined,
-      UnitPrice:   item.valueObject.UnitPrice?.valueNumber   ?? null ?? undefined,
-      Amount:      item.valueObject.Amount?.valueNumber      ?? null ?? undefined,
+      Description: item.valueObject.Description?.valueString ?? null,
+      Quantity:    item.valueObject.Quantity?.valueNumber    ?? null,
+      UnitPrice:   item.valueObject.UnitPrice?.valueNumber   ?? null,
+      Amount:      item.valueObject.Amount?.valueNumber      ?? null,
     };
   }
   return item;
